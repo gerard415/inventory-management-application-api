@@ -19,7 +19,7 @@ const notFoundMiddleware = require('./middleware/not-found');
 const errorHandlerMiddleware = require('./middleware/error-handler');
 
 //middleware
-app.use(cors({credentials: true, origin: 'http://localhost:3000'}));
+app.use(cors({credentials: true, origin: 'https://stockx-2oxn.onrender.com'}));
 app.use(express.json());
 app.use(cookieParser())
 app.use(express.urlencoded({ extended: true }));

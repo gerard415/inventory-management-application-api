@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken')
 const authMiddleware = async (req, res, next) => {
     const {token} = req.cookies
 
-    if(token){
+    if(req.cookies){
         try{
 
             const {userId, name} = jwt.verify(token, process.env.JWT_SECRET)

@@ -4,15 +4,21 @@ const jwt = require('jsonwebtoken')
 const authMiddleware = async (req, res, next) => {
     const {token} = req.cookies
 
-    try{
+    if(token){
+        try{
 
-        const {userId, name} = jwt.verify(token, 'uhwbnjsnsihnsmskijsnmsisjnmskjnhsmkjhnsbjsnsjhnsmjh')
-        req.user = {userId, name}  
-        next()
+            const {userId, name} = jwt.verify(token, process.env.JWT_SECRET)
+            req.user = {userId, name}  
+            next()
+        }
+        catch(error){
+            throw new UnauthenticatedError('Authentication invalid')
+        }
+    }else{
+        throw new UnauthenticatedError('no token')
     }
-    catch(error){
-        throw new UnauthenticatedError('Authentication invalid')
-    }
+
+    
 }
 
 module.exports = authMiddleware

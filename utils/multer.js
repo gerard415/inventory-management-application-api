@@ -1,14 +1,16 @@
 const multer = require('multer')
 const { v4: uuidv4 } = require('uuid')
 
-const storage = multer.diskStorage({
-    destination: function(req, file, callback) {
-        callback(null, 'uploads')
-    },
-    filename: function(req, file, callback){
-        callback(null, uuidv4() + '-' + Date.now() + file.originalname)
-    }
-})
+// const storage = multer.diskStorage({
+//     destination: function(req, file, callback) {
+//         callback(null, 'uploads')
+//     },
+//     filename: function(req, file, callback){
+//         callback(null, uuidv4() + '-' + Date.now() + file.originalname)
+//     }
+// })
+
+const storage = multer.memoryStorage()
 
 const fileFilter = (req, file, callback) => {
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']

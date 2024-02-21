@@ -33,7 +33,7 @@ const login = async (req, res) => {
 
     //creating the token
     const token = user.createJWT()
-    res.status(StatusCodes.OK).cookie('token', token).json({ name: user.name, email: user.email, id:user._id, phone:user.phone, bio:user.bio})
+    res.status(StatusCodes.OK).cookie("token", token, { domain: "stockx-jmyy.onrender.com" }).json({ name: user.name, email: user.email, id:user._id, phone:user.phone, bio:user.bio})
 }
 
 const logout = (req, res) => {

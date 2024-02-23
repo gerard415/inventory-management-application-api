@@ -40,19 +40,17 @@ const logout = (req, res) => {
     res.cookie('token', '').json(true)
 }
 
-const getProfile = async (req, res) => {
+const getProfile = (req, res) => {
     const token = req.headers.authorization.split(' ')[1]
 
-    if(token) {
-        try {
-            const {userId} = jwt.verify(token, process.env.JWT_SECRET)  
-            const {name, email, _id, phone, bio} = await User.findById(userId)
-            res.json({name, email, id:_id, phone, bio})
-        } catch (error) {
-            new BadRequestError('Please try again later')
-        }
+    if(token !== 'null') {
+        jwt.verify(token, process.env.JWT_SECRET, {}, async (err, user) => {
+            if(err) throw new new BadRequestError('Please try again later')
+            const {name, email, _id, phone, bio} = await User.findById(user.userId)
+            res.status(StatusCodes.OK).json({name, email, id:_id, phone, bio})
+        })
     }else{
-        throw new UnauthenticatedError('no token')
+        throw new UnauthenticatedError('You are not signed in')
     }
 }
 
@@ -64,16 +62,14 @@ const editProfile = async (req, res) => {
         throw new BadRequestError('Field cannot be empty')
     }
 
-    if(token){
-        try {
-            const {userId} = jwt.verify(token, process.env.JWT_SECRET)
-            const {name, email, _id, phone, bio} = await User.findOneAndUpdate({_id: userId}, {...req.body}, {new:true, runValidators:true})
+    if(token !== 'null'){
+        jwt.verify(token, process.env.JWT_SECRET, {}, async (err, user) => {
+            if(err) throw new Error
+            const {name, email, _id, phone, bio} = await User.findOneAndUpdate({_id: user.userId}, {...req.body}, {new:true, runValidators:true})
             res.status(StatusCodes.OK).json({name, email, id:_id, phone, bio})
-        } catch (error) {
-            new BadRequestError('Please try again later')
-        }
+        })
     }else{
-        throw new UnauthenticatedError('no token')
+        throw new UnauthenticatedError('You are not signed in')
     }
     
 }

@@ -2,7 +2,7 @@ const { BadRequestError, UnauthenticatedError } = require('../errors')
 const jwt = require('jsonwebtoken')
 
 const authMiddleware = async (req, res, next) => {
-    const {token} = req.cookies
+    const token = req.headers.authorization.split(' ')[1]
 
     if(token){
         try{

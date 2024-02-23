@@ -9,7 +9,7 @@ const register = async (req, res) => {
     
     //the token was created using an instance method in the user model. you are invoking it here. so as not to clog up the controllers.
     const token = user.createJWT()
-    res.status(StatusCodes.CREATED).cookie('token', token).json({ name: user.name})
+    res.status(StatusCodes.CREATED).json({ name: user.name, token: token})
 }
 
 const login = async (req, res) => {
@@ -33,42 +33,47 @@ const login = async (req, res) => {
 
     //creating the token
     const token = user.createJWT()
-    res.status(StatusCodes.OK).cookie("token", token).json({ name: user.name, email: user.email, id:user._id, phone:user.phone, bio:user.bio})
+    res.status(StatusCodes.OK).json({user: { name: user.name, email: user.email, id:user._id, phone:user.phone, bio:user.bio}, token: token})
 }
 
 const logout = (req, res) => {
     res.cookie('token', '').json(true)
 }
 
-const getProfile = (req, res) => {
-    const {token} = req.cookies
+const getProfile = async (req, res) => {
+    const token = req.headers.authorization.split(' ')[1]
 
     if(token) {
-        jwt.verify(token, process.env.JWT_SECRET, {}, async (err, user) => {
-            if(err) throw new BadRequestError('Please try again later')
-            
-            const {name, email, _id, phone, bio} = await User.findById(user.userId)
+        try {
+            const {userId} = jwt.verify(token, process.env.JWT_SECRET)  
+            const {name, email, _id, phone, bio} = await User.findById(userId)
             res.json({name, email, id:_id, phone, bio})
-    })
+        } catch (error) {
+            new BadRequestError('Please try again later')
+        }
     }else{
-        res.json(null)
+        throw new UnauthenticatedError('no token')
     }
 }
 
-const editProfile = (req, res) => {
-    const {token} = req.cookies
+const editProfile = async (req, res) => {
+    const token = req.headers.authorization.split(' ')[1]
     const {name} = req.body
 
-    if(!name){
+    if(name === ''){
         throw new BadRequestError('Field cannot be empty')
     }
 
     if(token){
-        jwt.verify(token, process.env.JWT_SECRET, {}, async (err, user) => {
-            if(err) throw new Error
-            const {name, email, _id, phone, bio} = await User.findOneAndUpdate({_id: user.userId}, {...req.body}, {new:true, runValidators:true})
+        try {
+            const {userId} = jwt.verify(token, process.env.JWT_SECRET)
+            const {name, email, _id, phone, bio} = await User.findOneAndUpdate({_id: userId}, {...req.body}, {new:true, runValidators:true})
             res.status(StatusCodes.OK).json({name, email, id:_id, phone, bio})
-        })
+        } catch (error) {
+            new BadRequestError('Please try again later')
+        }
+    }else{
+        throw new UnauthenticatedError('no token')
     }
     
 }

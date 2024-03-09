@@ -4,31 +4,47 @@ const { BadRequestError, NotFoundError } = require('../errors')
 const cloudinary = require('../utils/cloudinary')
 const fs = require('fs')
 const {fileSizeFormatter} = require('../utils/multer')
+const streamifier = require('streamifier');
 
 const upload = async (req, res) => {
     let fileData = [];
     if (req.files) {
         // Save image to cloudinary
         let uploadedFile 
+        let buffer
+
         for(let i = 0; i< req.files.length; i++){
             try {
-                const localFilePath = req.files[i].path
-                uploadedFile = await cloudinary.uploader.upload(localFilePath, {
-                    folder: "products",
-                    resource_type: "image",
+                buffer = req.files[i].buffer
+                
+                result = await new Promise((resolve) => {
+                    uploadedFile = cloudinary.uploader.upload_stream(
+                        {
+                            folder: "products",
+                            resource_type: "image",
+                        }, 
+                        (error, result) => {
+                            resolve({
+                                fileName: req.files[i].originalname,
+                                filePath: result.secure_url,
+                            })
+                        }
+                    )
+                    streamifier.createReadStream(buffer).pipe(uploadedFile)
                 })
-                fileData.push({
-                    fileName: req.files[i].originalname,
-                    filePath: uploadedFile.secure_url,
-                })
-
+                
+                fileData.push(result)
             } catch (error) {
                 res.status(500);
+                console.log(error)
                 throw new Error('Image could not be Uploaded');
             }
         }
+
+        res.json(fileData)
+    }else{
+        res.json('no files included')
     }
-    res.json(fileData) 
 }
 
 const createProduct = async (req, res) => {
